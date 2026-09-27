@@ -4,27 +4,27 @@
    If you add a real AI backend at /api/tutor (see README),
    it will automatically use that instead — see callSmartAI().
 ========================================================= */
- 
+
 /* ---------- PAGE NAVIGATION ---------- */
- 
+
 function showPage(pageName, button) {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.getElementById(pageName).classList.add("active");
- 
+
     document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
     button.classList.add("active");
- 
+
     if (pageName === "dashboard") renderDashboard();
 }
- 
+
 function toggleTheme() {
     document.body.classList.toggle("dark");
     localStorage.setItem("ss_theme", document.body.classList.contains("dark") ? "dark" : "light");
 }
- 
+
 /* ---------- ACTIVITY TRACKING (localStorage) ----------
    Powers the dashboard: subjects touched, streak, quiz scores. */
- 
+
 function getActivity() {
     try {
         return JSON.parse(localStorage.getItem("ss_activity")) || { subjects: {}, streak: 0, lastActive: null };
@@ -32,11 +32,11 @@ function getActivity() {
         return { subjects: {}, streak: 0, lastActive: null };
     }
 }
- 
+
 function saveActivity(a) {
     localStorage.setItem("ss_activity", JSON.stringify(a));
 }
- 
+
 function touchSubject(subject) {
     const a = getActivity();
     if (!a.subjects[subject]) a.subjects[subject] = { asked: 0, quizzes: 0, scoreSum: 0, scoreMax: 0 };
@@ -44,7 +44,7 @@ function touchSubject(subject) {
     bumpStreak(a);
     saveActivity(a);
 }
- 
+
 function recordQuiz(subject, score, max) {
     const a = getActivity();
     if (!a.subjects[subject]) a.subjects[subject] = { asked: 0, quizzes: 0, scoreSum: 0, scoreMax: 0 };
@@ -55,7 +55,7 @@ function recordQuiz(subject, score, max) {
     saveActivity(a);
     renderDashboard();
 }
- 
+
 function bumpStreak(a) {
     const today = new Date().toDateString();
     if (a.lastActive === today) return;
@@ -63,16 +63,16 @@ function bumpStreak(a) {
     a.streak = (a.lastActive === yesterday) ? a.streak + 1 : 1;
     a.lastActive = today;
 }
- 
+
 /* ---------- DASHBOARD RENDERING ---------- */
- 
+
 function renderDashboard() {
     const a = getActivity();
     const subjects = Object.keys(a.subjects);
- 
+
     document.getElementById("subjectCount").textContent = subjects.length;
     document.getElementById("streakCount").textContent = a.streak + (a.streak === 1 ? " Day" : " Days");
- 
+
     let totalQuizzes = 0, totalScore = 0, totalMax = 0;
     subjects.forEach(s => {
         totalQuizzes += a.subjects[s].quizzes;
@@ -81,7 +81,7 @@ function renderDashboard() {
     });
     document.getElementById("quizCount").textContent = totalQuizzes;
     document.getElementById("progressPercent").textContent = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) + "%" : "—";
- 
+
     const list = document.getElementById("progressList");
     if (subjects.length === 0) {
         list.innerHTML = `<p style="color:#888">Nothing yet — ask the tutor a question or take a quiz to see progress here.</p>`;
@@ -97,9 +97,9 @@ function renderDashboard() {
             </div>`;
     }).join("");
 }
- 
+
 /* ---------- NEW CHAT ---------- */
- 
+
 function newChat() {
     document.getElementById("chatMessages").innerHTML = `
         <div class="welcome">
@@ -116,29 +116,29 @@ function newChat() {
             </button>
         </div>`;
 }
- 
+
 /* ---------- CHAT ---------- */
- 
+
 function sendMessage() {
     const input = document.getElementById("messageInput");
     const message = input.value.trim();
     if (message === "") return;
- 
+
     addMessage("user", message);
     input.value = "";
- 
+
     const thinkingId = addMessage("ai", "Thinking…", true);
- 
+
     callSmartAI(message, buildTutorPrompt(message)).then(answer => {
         updateMessage(thinkingId, answer);
     });
 }
- 
+
 function askQuestion(question) {
     document.getElementById("messageInput").value = question;
     sendMessage();
 }
- 
+
 function addMessage(type, text, returnId) {
     const chat = document.getElementById("chatMessages");
     const message = document.createElement("div");
@@ -150,17 +150,17 @@ function addMessage(type, text, returnId) {
     window.scrollTo(0, document.body.scrollHeight);
     return id;
 }
- 
+
 function updateMessage(id, text) {
     const el = document.getElementById(id);
     if (el) el.querySelector(".bubble").innerHTML = text;
 }
- 
+
 function buildTutorPrompt(message) {
     return "You are a patient tutor for a student of any background — tech or non-tech. " +
         "Explain clearly in short paragraphs with a simple example. Question: " + message;
 }
- 
+
 /* =========================================================
    SMART AI LAYER
    Tries a real backend first (POST /api/tutor -> {answer}).
@@ -169,7 +169,7 @@ function buildTutorPrompt(message) {
    below so the app is never broken — see README for adding a
    real backend.
 ========================================================= */
- 
+
 async function callSmartAI(rawMessage, prompt) {
     try {
         const res = await fetch("/api/tutor", {
@@ -189,7 +189,7 @@ async function callSmartAI(rawMessage, prompt) {
     }
     return getLocalAnswer(rawMessage);
 }
- 
+
 function trackSubjectFromText(text) {
     const t = text.toLowerCase();
     let subject = "General";
@@ -202,13 +202,13 @@ function trackSubjectFromText(text) {
     else if (/math|equation|algebra|geometry/.test(t)) subject = "Math";
     touchSubject(subject);
 }
- 
+
 /* ---------- LOCAL KNOWLEDGE BASE (fallback, works offline) ---------- */
- 
+
 function getLocalAnswer(message) {
     const t = message.toLowerCase();
     trackSubjectFromText(message);
- 
+
     if (t.includes("pointer")) return topicPointer();
     if (t.includes("loop")) return topicLoop();
     if (t.includes("html") && t.includes("css")) return topicHtmlCss();
@@ -220,7 +220,7 @@ function getLocalAnswer(message) {
     if (t.includes("study plan")) return topicStudyPlan();
     if (t.includes("quiz")) return `Head to <b>Quiz Generator</b> in the sidebar — pick any subject, tech or non-tech, and generate one instantly.`;
     if (t.includes("career") || t.includes("learn next")) return topicCareer();
- 
+
     return `
         Good question! I don't have a ready-made explanation for that exact phrase yet,
         but I can help if you make it a bit more specific.
@@ -234,7 +234,7 @@ function getLocalAnswer(message) {
         Or open <b>Problem Solving</b> in the sidebar and paste an exact question or problem —
         that mode walks through it step by step.`;
 }
- 
+
 function topicPointer() {
     return `<b>What is a pointer (C++)?</b><br><br>
         A pointer is a variable that stores the <b>memory address</b> of another variable,
@@ -305,30 +305,30 @@ function topicCareer() {
         tech, commerce, arts, or science — plus your skills and interests, and it'll
         suggest a concrete next-step roadmap for you, not just for programmers.`;
 }
- 
+
 /* =========================================================
    PROBLEM SOLVING
 ========================================================= */
- 
+
 async function solveProblem() {
     const problem = document.getElementById("solveInput").value.trim();
     const box = document.getElementById("solveBox");
     if (!problem) return;
- 
+
     box.innerHTML = `<div class="output">Working through it…</div>`;
     const prompt = "Solve this step by step, numbering each step and explaining the reasoning, " +
         "then give a one-line final answer. Problem: " + problem;
- 
+
     const answer = await callSmartAI(problem, prompt);
     box.innerHTML = `<div class="output"><h2>🧩 Step-by-step</h2><br>${answer}
         <br><br><i>Tip: for word problems, break it into "what am I given" → "what am I finding" →
         "which formula connects them" — that's usually 80% of the work.</i></div>`;
 }
- 
+
 /* =========================================================
    QUIZ GENERATOR — now with real question banks per subject
 ========================================================= */
- 
+
 const QUIZ_BANK = {
     "C++": [
         { q: "What does 'int' declare?", options: ["A text value", "A whole number", "A decimal", "A loop"], correct: 1 },
@@ -367,13 +367,13 @@ const QUIZ_BANK = {
         { q: "What is the currency of Japan?", options: ["Won", "Yen", "Yuan", "Ringgit"], correct: 1 }
     ]
 };
- 
+
 function generateQuiz() {
     const subject = document.getElementById("quizSubject").value;
     const topic = document.getElementById("quizTopic").value;
     const quizBox = document.getElementById("quizBox");
     const questions = QUIZ_BANK[subject] || QUIZ_BANK["General Knowledge"];
- 
+
     quizBox.innerHTML = `
         <div class="output">
             <h2>${subject} Quiz</h2>
@@ -391,24 +391,24 @@ function generateQuiz() {
             <p id="score" style="margin-top:15px"></p>
         </div>`;
 }
- 
+
 function checkQuiz(subject, total) {
     let score = 0;
     document.querySelectorAll('input[value="correct"]').forEach(a => { if (a.checked) score++; });
     document.getElementById("score").innerHTML = `<b>Your Score: ${score} / ${total}</b>`;
     recordQuiz(subject, score, total);
 }
- 
+
 /* =========================================================
    STUDY PLANNER
 ========================================================= */
- 
+
 function generatePlan() {
     const subjects = document.getElementById("subjects").value || "your subjects";
     const hours = document.getElementById("hours").value;
     const goal = document.getElementById("goal").value || "improve your skills";
     const box = document.getElementById("planBox");
- 
+
     box.innerHTML = `
         <div class="output">
             <h2>📅 Your Study Plan</h2><br>
@@ -424,25 +424,25 @@ function generatePlan() {
             <b>Day 7</b><br>Full revision + self-test
         </div>`;
 }
- 
+
 /* =========================================================
    CAREER GUIDE — now branches by background, not just tech
 ========================================================= */
- 
+
 const CAREER_PATHS = {
     tech: ["JavaScript", "Git & GitHub", "Data Structures & Algorithms", "React", "Backend basics (Node/Django)", "System design fundamentals"],
     commerce: ["Excel & financial modeling", "Basic accounting (Tally/QuickBooks)", "Digital marketing basics", "Business communication", "Introductory data analysis (Excel/SQL)"],
     arts: ["Strong writing & research skills", "Public speaking / communication", "Basic design tools (Canva/Figma)", "Social media & content strategy", "A portfolio of writing or projects"],
     science: ["Lab technique & data recording", "Statistics fundamentals", "Scientific writing", "A specialization (bio/chem/physics track)", "Research internships"]
 };
- 
+
 function careerGuide() {
     const background = document.getElementById("background").value;
     const skills = document.getElementById("skills").value || "just getting started";
     const interest = document.getElementById("interest").value || "still exploring";
     const box = document.getElementById("careerBox");
     const path = CAREER_PATHS[background] || CAREER_PATHS.tech;
- 
+
     box.innerHTML = `
         <div class="output">
             <h2>🎯 Your Learning Roadmap</h2><br>
@@ -453,24 +453,24 @@ function careerGuide() {
             ${path.map((step, i) => `${i + 1}️⃣ ${step}`).join("<br><br>")}
         </div>`;
 }
- 
+
 /* ---------- INIT ---------- */
- 
+
 window.addEventListener("DOMContentLoaded", () => {
     if (localStorage.getItem("ss_theme") === "dark") document.body.classList.add("dark");
     initCgpaCalculator();
     initTimetable();
     updateExamCountdown();
 });
- 
+
 /* =========================================================
    CGPA CALCULATOR
    Standard 10-point grade scale — edit GRADE_POINTS below if
    your college uses a different scale.
 ========================================================= */
- 
+
 const GRADE_POINTS = { "O": 10, "A+": 9, "A": 8, "B+": 7, "B": 6, "C": 5, "F": 0 };
- 
+
 function initCgpaCalculator() {
     const rows = document.getElementById("cgpaRows");
     if (!rows) return;
@@ -478,7 +478,7 @@ function initCgpaCalculator() {
     addCgpaRow();
     addCgpaRow();
 }
- 
+
 function addCgpaRow() {
     const rows = document.getElementById("cgpaRows");
     const row = document.createElement("div");
@@ -492,18 +492,18 @@ function addCgpaRow() {
         <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>`;
     rows.appendChild(row);
 }
- 
+
 function calculateCGPA() {
     const rows = document.querySelectorAll(".cgpa-row");
     let totalCredits = 0, totalPoints = 0;
- 
+
     rows.forEach(row => {
         const credits = parseFloat(row.querySelector(".cgpa-credits").value) || 0;
         const grade = row.querySelector(".cgpa-grade").value;
         totalCredits += credits;
         totalPoints += credits * (GRADE_POINTS[grade] ?? 0);
     });
- 
+
     const result = document.getElementById("cgpaResult");
     if (totalCredits === 0) {
         result.innerHTML = `<div class="output">Enter at least one subject's credits to calculate.</div>`;
@@ -512,41 +512,110 @@ function calculateCGPA() {
     const cgpa = (totalPoints / totalCredits).toFixed(2);
     result.innerHTML = `<div class="output"><h2>Your CGPA: ${cgpa}</h2><p>Based on ${rows.length} subject(s), ${totalCredits} total credits.</p></div>`;
 }
- 
+
 /* =========================================================
    TIMETABLE + EXAM COUNTDOWN
    Saved to localStorage (per device) for now — will move to
    Supabase once accounts are added, so it follows you anywhere.
 ========================================================= */
- 
+
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const SLOTS = ["9-10", "10-11", "11-12", "12-1", "2-3", "3-4"];
- 
+const SLOTS = [
+    { time: "9:40-10:30" },
+    { time: "10:30-11:20" },
+    { time: "11:20-12:10" },
+    { time: "12:10-1:00" },
+    { time: "LUNCH", lunch: true },
+    { time: "1:50-2:40" },
+    { time: "2:40-3:30" },
+    { time: "3:30-4:30" }
+];
+
+/* Pre-filled from NIET Gr. Noida, Section AI-B master timetable (wef 31/08/2026).
+   Edit any cell freely on the page — your edits are saved and take over from
+   these defaults. Subject code key: DAS0103 Calculus & Linear Algebra (PRG) |
+   DEC0101 Digital Electronics & IoT (JLD) | DCSAI0101 Fundamentals of AI (DPS) |
+   DCSE0151 C Programming (SOJ) | DCSE0152 Web Designing (SSD) |
+   DMB0101 Innovation & Entrepreneurship (VPY) | DNC0102 Constitution of India (KAJ) */
+const DEFAULT_TIMETABLE = {
+    "Mon_9:40-10:30": "ABC LAB (PYG/PC)",
+    "Mon_10:30-11:20": "ABC LAB (PYG/PC)",
+    "Mon_11:20-12:10": "DEC0101 (JLD)",
+    "Mon_12:10-1:00": "Foreign Lang",
+    "Mon_1:50-2:40": "DAS0103 (PRG)",
+    "Mon_2:40-3:30": "C Prog LAB (SOJ/SPN)",
+    "Mon_3:30-4:30": "C Prog LAB (SOJ/SPN)",
+
+    "Tue_9:40-10:30": "DNC0102 (KAJ)",
+    "Tue_10:30-11:20": "DAS0103 (PRG)",
+    "Tue_11:20-12:10": "DAS0103 (PRG)",
+    "Tue_12:10-1:00": "DMB0101 (VPY)",
+    "Tue_1:50-2:40": "Foreign Lang",
+    "Tue_2:40-3:30": "Web D LAB (SSD/DKS)",
+    "Tue_3:30-4:30": "Web D LAB (SSD/DKS)",
+
+    "Wed_9:40-10:30": "C Prog LAB (SOJ/FHK)",
+    "Wed_10:30-11:20": "C Prog LAB (SOJ/FHK)",
+    "Wed_11:20-12:10": "DAS0103 (PRG)",
+    "Wed_12:10-1:00": "Foreign Lang",
+    "Wed_1:50-2:40": "DEC0101 (JLD)",
+    "Wed_2:40-3:30": "DAS0103 (PRG)",
+    "Wed_3:30-4:30": "DMB0101 (VPY)",
+
+    "Thu_9:40-10:30": "DEC0101 (JLD)",
+    "Thu_10:30-11:20": "DCSAI0101 (DPS)",
+    "Thu_11:20-12:10": "DAS0103 (PRG)",
+    "Thu_12:10-1:00": "DNC0102 (KAJ)",
+    "Thu_1:50-2:40": "DEC0101 (JLD)",
+    "Thu_2:40-3:30": "ABC LAB (PYG/PC)",
+    "Thu_3:30-4:30": "ABC LAB (PYG/PC)",
+
+    "Fri_9:40-10:30": "DCSAI0101 (DPS)",
+    "Fri_10:30-11:20": "DMB0101 (VPY)",
+    "Fri_11:20-12:10": "IOT LAB (JLD/DNS)",
+    "Fri_12:10-1:00": "IOT LAB (JLD/DNS)",
+    "Fri_1:50-2:40": "DEC0101 (JLD)",
+    "Fri_2:40-3:30": "DAS0103 (PRG)",
+    "Fri_3:30-4:30": "DCSAI0101 (DPS)",
+
+    "Sat_9:40-10:30": "DAS0103 (PRG)",
+    "Sat_10:30-11:20": "DCSAI0101 (DPS)",
+    "Sat_11:20-12:10": "DCSE0152 (SSD)",
+    "Sat_12:10-1:00": "DEC0101 (JLD)",
+    "Sat_1:50-2:40": "DCSE0151 (SOJ)",
+    "Sat_2:40-3:30": "DAS0103 (PRG)",
+    "Sat_3:30-4:30": "DMB0101 (VPY)"
+};
+
 function initTimetable() {
     const grid = document.getElementById("timetableGrid");
     if (!grid) return;
- 
-    const saved = JSON.parse(localStorage.getItem("ss_timetable") || "{}");
- 
+
+    const saved = JSON.parse(localStorage.getItem("ss_timetable") || "null") || DEFAULT_TIMETABLE;
+
     let html = `<div class="tt-row tt-header"><div></div>${DAYS.map(d => `<div>${d}</div>`).join("")}</div>`;
     SLOTS.forEach(slot => {
-        html += `<div class="tt-row"><div class="tt-slot">${slot}</div>`;
+        if (slot.lunch) {
+            html += `<div class="tt-row tt-lunch"><div class="tt-slot">1:00-1:50</div><div class="tt-lunch-label">LUNCH</div></div>`;
+            return;
+        }
+        html += `<div class="tt-row"><div class="tt-slot">${slot.time}</div>`;
         DAYS.forEach(day => {
-            const key = day + "_" + slot;
+            const key = day + "_" + slot.time;
             const value = saved[key] || "";
             html += `<input class="tt-cell" data-key="${key}" value="${value}" placeholder="—">`;
         });
         html += `</div>`;
     });
     grid.innerHTML = html;
- 
+
     const examData = JSON.parse(localStorage.getItem("ss_exam") || "null");
     if (examData) {
         document.getElementById("examName").value = examData.name;
         document.getElementById("examDate").value = examData.date;
     }
 }
- 
+
 function saveTimetable() {
     const data = {};
     document.querySelectorAll(".tt-cell").forEach(cell => {
@@ -555,7 +624,7 @@ function saveTimetable() {
     localStorage.setItem("ss_timetable", JSON.stringify(data));
     alert("Timetable saved!");
 }
- 
+
 function saveExam() {
     const name = document.getElementById("examName").value.trim();
     const date = document.getElementById("examDate").value;
@@ -563,13 +632,13 @@ function saveExam() {
     localStorage.setItem("ss_exam", JSON.stringify({ name, date }));
     updateExamCountdown();
 }
- 
+
 function updateExamCountdown() {
     const el = document.getElementById("examCountdown");
     if (!el) return;
     const examData = JSON.parse(localStorage.getItem("ss_exam") || "null");
     if (!examData) { el.textContent = ""; return; }
- 
+
     const days = Math.ceil((new Date(examData.date) - new Date()) / 86400000);
     el.textContent = days > 0
         ? `⏳ ${examData.name}: ${days} day${days === 1 ? "" : "s"} left`
@@ -577,4 +646,3 @@ function updateExamCountdown() {
             ? `📌 ${examData.name} is today!`
             : `${examData.name} has passed.`;
 }
- 
