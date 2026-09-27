@@ -1021,12 +1021,27 @@ body.dark .stat-card {
     background: transparent;
     color: inherit;
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
     min-width: 0;
 }
  
 body.dark .tt-cell {
     border-color: #444;
+}
+ 
+.tt-lunch {
+    background: rgba(16, 163, 127, 0.08);
+    border-radius: 8px;
+    padding: 4px 0;
+}
+ 
+.tt-lunch-label {
+    grid-column: span 6;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #10a37f;
+    font-size: 12px;
 }
  
 /* MOBILE */
