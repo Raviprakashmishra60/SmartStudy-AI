@@ -1,0 +1,779 @@
+web application/stitch/projects/18084037343957962871/screens/1043654999202398117
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SmartStudy AI</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Extra UI styling kept here so this page works even without a separate CSS file. -->
+    <style>
+        :root { --ink:#17203a; --muted:#64748b; --brand:#635bff; --brand2:#14b8a6; --card:#fff; --line:#e7eaf3; }
+        * { box-sizing: border-box; }
+        body { margin:0; background:#f6f8ff; color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+        button,input,select,textarea { font:inherit; }
+        .app { min-height:100vh; display:flex; }
+        .sidebar { width:255px; min-height:100vh; padding:18px 14px; background:#111936; color:#fff; display:flex; flex-direction:column; position:sticky; top:0; }
+        .new-chat,.primary-btn { border:0; cursor:pointer; color:#fff; background:linear-gradient(135deg,#7468ff,#4f46e5); border-radius:12px; font-weight:700; padding:13px 15px; box-shadow:0 9px 24px rgba(99,91,255,.25); }
+        .menu { margin-top:24px; }.menu p { font-size:.72rem; color:#9ba6cf; letter-spacing:.12em; font-weight:800; margin:0 10px 10px; }
+        .menu-btn,.theme-btn { cursor:pointer; width:100%; border:0; background:transparent; color:#c9d0eb; text-align:left; padding:12px; border-radius:10px; margin:3px 0; font-weight:650; }
+        .menu-btn:hover,.menu-btn.active,.theme-btn:hover { color:#fff; background:rgba(255,255,255,.11); }.sidebar-bottom { margin-top:auto; }
+        .profile { display:flex; align-items:center; gap:10px; margin:14px 7px 3px; }.profile small { display:block; color:#aeb7d7; margin-top:2px; }.profile-img { width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:linear-gradient(135deg,#fb7185,#a855f7); font-weight:800; }
+        .main { flex:1; min-width:0; }.topbar { min-height:72px; padding:0 34px; display:flex; align-items:center; gap:14px; background:rgba(255,255,255,.9); border-bottom:1px solid var(--line); }.topbar h3 { margin:0; }.topbar span { color:var(--muted); font-size:.9rem; }
+        .page { display:none; }.page.active { display:block; }.page-container { max-width:1040px; margin:0 auto; padding:38px 30px 60px; }.page-container h1 { margin:0 0 8px; }.page-container>p { margin:0 0 25px; color:var(--muted); }
+        .card { background:var(--card); border:1px solid var(--line); box-shadow:0 12px 35px rgba(31,41,55,.05); border-radius:18px; padding:22px; margin:18px 0; }.card label { display:block; font-weight:700; margin:14px 0 7px; }.card label:first-child { margin-top:0; }
+        input,select,textarea { width:100%; border:1px solid #dbe1f0; outline:0; border-radius:10px; background:#fff; color:var(--ink); padding:12px 13px; }.card .primary-btn { margin-top:18px; }.primary-btn:hover,.new-chat:hover { transform:translateY(-1px); }
+        .chat-container { min-height:calc(100vh - 72px); max-width:1050px; margin:auto; display:flex; flex-direction:column; padding:26px 28px 18px; }.chat-messages { flex:1; overflow:auto; padding:18px 0; }.welcome { text-align:center; padding:38px 10px 18px; }.ai-logo { width:58px; height:58px; margin:auto; border-radius:18px; display:grid; place-items:center; background:linear-gradient(135deg,#7468ff,#14b8a6); color:#fff; font-size:28px; }.welcome h1 { margin:16px 0 7px; font-size:2rem; }.welcome p { margin:0; color:var(--muted); }
+        .suggestions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-width:780px; margin:24px auto; }.suggestions button { cursor:pointer; text-align:left; display:flex; gap:12px; align-items:flex-start; background:#fff; border:1px solid var(--line); padding:16px; border-radius:15px; color:var(--ink); }.suggestions button:hover { border-color:#9b95ff; box-shadow:0 10px 24px rgba(99,91,255,.09); }.suggestions small { color:var(--muted); display:block; margin-top:3px; }
+        .input-area { background:linear-gradient(180deg,transparent,#f6f8ff 24%); padding-top:20px; }.chat-input { display:flex; gap:9px; align-items:end; max-width:900px; margin:auto; padding:8px; border:1px solid #dfe3f1; border-radius:16px; background:#fff; box-shadow:0 12px 30px rgba(20,30,60,.09); }.chat-input textarea { min-height:46px; max-height:140px; resize:vertical; border:0; padding:11px; }.chat-input button { border:0; cursor:pointer; width:43px; height:43px; border-radius:12px; background:var(--brand); color:#fff; font-size:18px; }.input-area>small { display:block; text-align:center; color:var(--muted); margin:9px; }
+        .message { display:flex; gap:10px; max-width:850px; margin:13px auto; align-items:flex-start; }.message.user { flex-direction:row-reverse; }.avatar { flex:0 0 33px; height:33px; display:grid; place-items:center; border-radius:10px; background:#e7e5ff; }.message.user .avatar { background:#d1fae5; }.bubble { padding:12px 14px; border-radius:14px; background:#fff; border:1px solid var(--line); line-height:1.55; white-space:pre-wrap; }.message.user .bubble { background:#635bff; color:#fff; border-color:#635bff; }
+        .tutor-grid { display:grid; grid-template-columns:1.25fr .75fr; gap:18px; }.feature-list { list-style:none; padding:0; margin:15px 0 0; }.feature-list li { padding:9px 0; border-bottom:1px solid #edf0f7; }.feature-list li:last-child { border:0; }.mini-note { background:#f0fdf9; border:1px solid #b7f0df; border-radius:12px; padding:14px; color:#17634f; }.flashcard { min-height:180px; cursor:pointer; perspective:900px; }.flashcard-inner { position:relative; min-height:180px; transition:transform .55s; transform-style:preserve-3d; }.flashcard.flipped .flashcard-inner { transform:rotateY(180deg); }.flash-face { position:absolute; inset:0; padding:24px; border-radius:16px; backface-visibility:hidden; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(135deg,#635bff,#8b5cf6); color:white; }.flash-back { transform:rotateY(180deg); background:linear-gradient(135deg,#0f766e,#14b8a6); }.flash-face small { opacity:.75; margin-bottom:10px; }.flash-face b { font-size:1.15rem; }.flashcard + small { display:block; text-align:center; margin-top:8px; color:var(--muted); }
+        .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }.stat-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; }.stat-card span,.stat-card small,.stat-card b { display:block; }.stat-card small { color:var(--muted); margin:10px 0 3px; }.stat-card b { font-size:1.25rem; }.progress { margin-top:20px; }.progress-title { display:flex; justify-content:space-between; margin-bottom:8px; }.bar { height:10px; border-radius:99px; background:#eef1f8; overflow:hidden; }.bar div { height:100%; border-radius:99px; background:linear-gradient(90deg,#635bff,#14b8a6); }
+        .result-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px; margin-top:20px; }.quiz-option { display:block; width:100%; text-align:left; cursor:pointer; margin:9px 0; padding:12px; border:1px solid #dfe4ef; background:#fff; border-radius:10px; }.quiz-option:hover { border-color:#7468ff; }.quiz-option.correct { background:#ecfdf5; border-color:#10b981; }.quiz-option.wrong { background:#fef2f2; border-color:#ef4444; }
+        .dark-mode { background:#0c1225; color:#e8ecff; }.dark-mode .topbar,.dark-mode .card,.dark-mode .stat-card,.dark-mode .result-card,.dark-mode .suggestions button,.dark-mode .bubble,.dark-mode input,.dark-mode select,.dark-mode textarea,.dark-mode .chat-input { background:#151f3d; color:#e8ecff; border-color:#2d3a61; }.dark-mode .page-container>p,.dark-mode .welcome p,.dark-mode .input-area>small,.dark-mode .suggestions small,.dark-mode .flashcard + small { color:#a9b5d4; }.dark-mode .input-area { background:linear-gradient(180deg,transparent,#0c1225 24%); }
+        @media(max-width:800px){ .sidebar { position:fixed; z-index:3; width:68px; padding:12px 8px; }.sidebar .menu p,.sidebar .menu-btn,.sidebar .new-chat,.sidebar .theme-btn,.profile>div:last-child { font-size:0; }.sidebar .new-chat { height:45px; padding:0; }.sidebar .new-chat::after { content:'+'; font-size:24px; }.sidebar .menu-btn,.sidebar .theme-btn { text-align:center; font-size:19px; }.main { margin-left:68px; }.topbar { padding:0 18px; }.topbar span { display:none; }.page-container,.chat-container { padding-left:18px; padding-right:18px; }.tutor-grid { grid-template-columns:1fr; }.stats { grid-template-columns:repeat(2,1fr); }.suggestions { grid-template-columns:1fr; }.welcome h1 { font-size:1.55rem; } }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <button class="new-chat" onclick="newChat()">
+                + New Chat
+            </button>
+
+
+            <div class="menu">
+
+                <p>SMARTSTUDY</p>
+
+                <button class="menu-btn active" onclick="showPage('chat', this)">
+                    🤖 AI Tutor
+                </button>
+
+                <button class="menu-btn" onclick="showPage('tutor', this)">
+                    🧠 Smart Tutor
+                </button>
+
+                <button class="menu-btn" onclick="showPage('quiz', this)">
+                    📝 Quiz Generator
+                </button>
+
+                <button class="menu-btn" onclick="showPage('planner', this)">
+                    📅 Study Planner
+                </button>
+
+                <button class="menu-btn" onclick="showPage('career', this)">
+                    🎯 Career Guide
+                </button>
+
+                <button class="menu-btn" onclick="showPage('dashboard', this)">
+                    📊 Dashboard
+                </button>
+
+            </div>
+
+
+            <div class="sidebar-bottom">
+
+                <button onclick="toggleTheme()" class="theme-btn">
+                    🌙 Dark Mode
+                </button>
+
+                <div class="profile">
+
+                    <div class="profile-img">
+                        S
+                    </div>
+
+                    <div>
+
+                        <b>Student</b>
+
+                        <small>
+                            Learning Mode
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN -->
+
+        <main class="main">
+
+
+            <!-- TOPBAR -->
+
+            <header class="topbar">
+
+                <h3>
+                    ✦ SmartStudy AI
+                </h3>
+
+                <span>
+                    Your Personal Learning Assistant
+                </span>
+
+            </header>
+
+
+            <!-- ================= CHAT ================= -->
+
+            <section id="chat" class="page active">
+
+                <div class="chat-container">
+
+                    <div id="chatMessages" class="chat-messages">
+
+                        <div class="welcome">
+
+                            <div class="ai-logo">
+                                ✦
+                            </div>
+
+                            <h1>
+                                How can I help you learn?
+                            </h1>
+
+                            <p>
+                                Ask me anything about your studies.
+                            </p>
+
+                        </div>
+
+
+                        <!-- SUGGESTIONS -->
+
+                        <div class="suggestions">
+
+                            <button onclick="askQuestion('Explain C++ pointers in simple language')">
+
+                                💡
+
+                                <div>
+
+                                    <b>
+                                        Explain a concept
+                                    </b>
+
+                                    <small>
+                                        Explain C++ pointers
+                                    </small>
+
+                                </div>
+
+                            </button>
+
+
+                            <button onclick="askQuestion('Give me a C++ quiz')">
+
+                                📝
+
+                                <div>
+
+                                    <b>
+                                        Practice
+                                    </b>
+
+                                    <small>
+                                        Give me a C++ quiz
+                                    </small>
+
+                                </div>
+
+                            </button>
+
+
+                            <button onclick="askQuestion('Make a study plan for me')">
+
+                                📅
+
+                                <div>
+
+                                    <b>
+                                        Study Plan
+                                    </b>
+
+                                    <small>
+                                        Make my study plan
+                                    </small>
+
+                                </div>
+
+                            </button>
+
+
+                            <button onclick="askQuestion('What should I learn after HTML and CSS?')">
+
+                                🎯
+
+                                <div>
+
+                                    <b>
+                                        Career Guidance
+                                    </b>
+
+                                    <small>
+                                        What should I learn next?
+                                    </small>
+
+                                </div>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CHAT INPUT -->
+
+                    <div class="input-area">
+
+                        <div class="chat-input">
+
+                            <textarea id="messageInput" placeholder="Message SmartStudy AI..."></textarea>
+
+                            <button onclick="sendMessage()" id="sendButton">
+                                ➤
+                            </button>
+
+                        </div>
+
+                        <small>
+                            SmartStudy AI • Built for students
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ================= SMART TUTOR ================= -->
+            <section id="tutor" class="page">
+                <div class="page-container">
+                    <h1>🧠 Smart Tutor Studio</h1>
+                    <p>Get a guided lesson, a clear explanation style, and a quick flashcard review.</p>
+
+                    <div class="tutor-grid">
+                        <div class="card">
+                            <h2>Build a focused lesson</h2>
+                            <label for="tutorTopic">What do you want to learn?</label>
+                            <input id="tutorTopic" placeholder="Example: JavaScript async/await">
+
+                            <label for="learningStyle">Explain it as</label>
+                            <select id="learningStyle">
+                                <option value="simple">Simple beginner explanation</option>
+                                <option value="example">Real-world example</option>
+                                <option value="step">Step-by-step lesson</option>
+                                <option value="interview">Interview preparation</option>
+                            </select>
+
+                            <button class="primary-btn" onclick="startTutorLesson()">Start Tutor Lesson ✨</button>
+                            <div id="tutorResult"></div>
+                        </div>
+
+                        <div>
+                            <div class="card">
+                                <h2>Today's learning flow</h2>
+                                <ul class="feature-list">
+                                    <li>✅ Learn one concept in 10 minutes</li>
+                                    <li>🧩 Try one mini challenge</li>
+                                    <li>🔁 Review with a flashcard</li>
+                                    <li>🎯 Finish with a next-step goal</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <h2>Quick Flashcard</h2>
+                                <div class="flashcard" onclick="this.classList.toggle('flipped')" aria-label="Flip flashcard">
+                                    <div class="flashcard-inner">
+                                        <div class="flash-face"><small>QUESTION</small><b>What does <code>async</code> do in JavaScript?</b></div>
+                                        <div class="flash-face flash-back"><small>ANSWER</small><b>It makes a function return a Promise and lets you use <code>await</code> inside it.</b></div>
+                                    </div>
+                                </div>
+                                <small>Click the card to reveal the answer.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ================= QUIZ ================= -->
+
+            <section id="quiz" class="page">
+
+                <div class="page-container">
+
+                    <h1>
+                        📝 Quiz Generator
+                    </h1>
+
+                    <p>
+                        Practice your knowledge with quick MCQs.
+                    </p>
+
+
+                    <div class="card">
+
+                        <label>
+                            Select Subject
+                        </label>
+
+                        <select id="quizSubject">
+
+                            <option>
+                                C++
+                            </option>
+
+                            <option>
+                                HTML
+                            </option>
+
+                            <option>
+                                CSS
+                            </option>
+
+                            <option>
+                                JavaScript
+                            </option>
+
+                            <option>
+                                AI / ML
+                            </option>
+
+                        </select>
+
+
+                        <label>
+                            Topic
+                        </label>
+
+                        <input id="quizTopic" placeholder="Example: Loops">
+
+
+                        <button class="primary-btn" onclick="generateQuiz()">
+                            Generate Quiz
+                        </button>
+
+                    </div>
+
+
+                    <div id="quizBox"></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= PLANNER ================= -->
+
+            <section id="planner" class="page">
+
+                <div class="page-container">
+
+                    <h1>
+                        📅 Study Planner
+                    </h1>
+
+                    <p>
+                        Create a simple daily study plan.
+                    </p>
+
+
+                    <div class="card">
+
+                        <label>
+                            Your Subjects
+                        </label>
+
+                        <input id="subjects" placeholder="C++, DSA, Web Development">
+
+
+                        <label>
+                            Study Hours
+                        </label>
+
+                        <input id="hours" type="number" value="3">
+
+
+                        <label>
+                            Your Goal
+                        </label>
+
+                        <input id="goal" placeholder="Prepare for exams">
+
+
+                        <button class="primary-btn" onclick="generatePlan()">
+                            Create Study Plan
+                        </button>
+
+                    </div>
+
+
+                    <div id="planBox"></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= CAREER ================= -->
+
+            <section id="career" class="page">
+
+                <div class="page-container">
+
+                    <h1>
+                        🎯 Career Guide
+                    </h1>
+
+                    <p>
+                        Tell us what you know and we'll suggest
+                        what you can learn next.
+                    </p>
+
+
+                    <div class="card">
+
+                        <label>
+                            Your Skills
+                        </label>
+
+                        <input id="skills" placeholder="HTML, CSS, C++, Python">
+
+
+                        <label>
+                            Your Interest
+                        </label>
+
+                        <input id="interest" placeholder="Web Development / AI">
+
+
+                        <button class="primary-btn" onclick="careerGuide()">
+                            Get Guidance
+                        </button>
+
+                    </div>
+
+
+                    <div id="careerBox"></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= DASHBOARD ================= -->
+
+            <section id="dashboard" class="page">
+
+                <div class="page-container">
+
+                    <h1>
+                        📊 Learning Dashboard
+                    </h1>
+
+                    <p>
+                        Track your learning progress.
+                    </p>
+
+
+                    <div class="stats">
+
+                        <div class="stat-card">
+
+                            <span>
+                                📚
+                            </span>
+
+                            <small>
+                                Subjects
+                            </small>
+
+                            <b>
+                                4
+                            </b>
+
+                        </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                🔥
+                            </span>
+
+                            <small>
+                                Study Streak
+                            </small>
+
+                            <b>
+                                5 Days
+                            </b>
+
+                        </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                📝
+                            </span>
+
+                            <small>
+                                Quizzes
+                            </small>
+
+                            <b id="quizCount">
+                                0
+                            </b>
+
+                        </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                📈
+                            </span>
+
+                            <small>
+                                Progress
+                            </small>
+
+                            <b>
+                                72%
+                            </b>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card">
+
+                        <h2>
+                            Learning Progress
+                        </h2>
+
+
+                        <div class="progress">
+
+                            <div class="progress-title">
+
+                                <span>
+                                    C++
+                                </span>
+
+                                <b>
+                                    75%
+                                </b>
+
+                            </div>
+
+                            <div class="bar">
+                                <div style="width:75%"></div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="progress">
+
+                            <div class="progress-title">
+
+                                <span>
+                                    Web Development
+                                </span>
+
+                                <b>
+                                    65%
+                                </b>
+
+                            </div>
+
+                            <div class="bar">
+                                <div style="width:65%"></div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="progress">
+
+                            <div class="progress-title">
+
+                                <span>
+                                    DSA
+                                </span>
+
+                                <b>
+                                    55%
+                                </b>
+
+                            </div>
+
+                            <div class="bar">
+                                <div style="width:55%"></div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="progress">
+
+                            <div class="progress-title">
+
+                                <span>
+                                    AI / ML
+                                </span>
+
+                                <b>
+                                    45%
+                                </b>
+
+                            </div>
+
+                            <div class="bar">
+                                <div style="width:45%"></div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+    <!-- Functional fallback/upgrade script. It complements your existing script.js. -->
+    <script>
+        const tutorAnswers = {
+            pointers: "A pointer stores the memory address of another value. Think of it as a house address: the value is the house and the pointer tells you where it lives.",
+            html: "HTML gives a web page its structure. It tells the browser what is a heading, paragraph, image, form, or button.",
+            css: "CSS controls appearance: layout, colors, spacing, fonts, and responsive design. HTML is the structure; CSS is the presentation.",
+            javascript: "JavaScript adds behavior to a webpage. It can respond to clicks, validate forms, update content, and fetch data without reloading the page.",
+            async: "Async code handles work that takes time, such as loading data. Use async/await to write Promise-based code in a readable, step-by-step way."
+        };
+
+        function showPage(pageId, button) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            const page = document.getElementById(pageId);
+            if (page) page.classList.add('active');
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            if (button) button.classList.add('active');
+        }
+
+        function newChat() {
+            showPage('chat', document.querySelector(".menu-btn[onclick*='chat']"));
+            const messages = document.getElementById('chatMessages');
+            if (messages) messages.innerHTML = '<div class="welcome"><div class="ai-logo">✦</div><h1>New learning conversation</h1><p>Tell me a topic and I will explain it clearly.</p></div>';
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const button = document.querySelector('.theme-btn');
+            if (button) button.textContent = document.body.classList.contains('dark-mode') ? '☀️ Light Mode' : '🌙 Dark Mode';
+        }
+
+        function addMessage(text, role = 'ai') {
+            const messages = document.getElementById('chatMessages');
+            if (!messages) return;
+            const welcome = messages.querySelector('.welcome');
+            if (welcome) welcome.remove();
+            const suggestions = messages.querySelector('.suggestions');
+            if (suggestions) suggestions.remove();
+            const item = document.createElement('div');
+            item.className = 'message ' + (role === 'user' ? 'user' : 'ai');
+            item.innerHTML = `<div class="avatar">${role === 'user' ? '🧑‍🎓' : '✦'}</div><div class="bubble"></div>`;
+            item.querySelector('.bubble').textContent = text;
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function tutorReply(question) {
+            const query = question.toLowerCase();
+            const key = Object.keys(tutorAnswers).find(item => query.includes(item));
+            if (query.includes('quiz')) return "Quick quiz: What is the difference between HTML, CSS, and JavaScript?\n\nA) They do the same job\nB) Structure, style, and behavior\nC) Only CSS builds a page\n\nAnswer: B. HTML structures content, CSS styles it, and JavaScript adds interaction.";
+            if (query.includes('study plan')) return "Study plan for today:\n1. Learn one concept for 25 minutes.\n2. Take a 5-minute break.\n3. Build a tiny example for 25 minutes.\n4. Review your notes and write 3 key points.\n\nUse the Study Planner for a personalized schedule.";
+            if (query.includes('what should i learn') || query.includes('next')) return "Since you have completed HTML, CSS, and JavaScript, a strong next path is: Git & GitHub → responsive projects → APIs/fetch → React → Node.js basics. Build 3 portfolio projects while learning.";
+            return tutorAnswers[key] || "Great question! Break the topic into three parts: the main idea, one simple example, and a small practice task. Tell me the exact topic (for example, 'JavaScript arrays') and your level, and I will make a guided lesson.";
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input && input.value.trim();
+            if (!message) return;
+            addMessage(message, 'user');
+            input.value = '';
+            setTimeout(() => addMessage(tutorReply(message), 'ai'), 350);
+        }
+
+        function askQuestion(question) {
+            showPage('chat', document.querySelector(".menu-btn[onclick*='chat']"));
+            const input = document.getElementById('messageInput');
+            if (input) { input.value = question; sendMessage(); }
+        }
+
+        function startTutorLesson() {
+            const topic = document.getElementById('tutorTopic').value.trim() || 'JavaScript fundamentals';
+            const style = document.getElementById('learningStyle').value;
+            const styleText = { simple:'simple beginner language', example:'a real-world analogy and example', step:'clear steps you can follow', interview:'interview-ready explanation and questions' }[style];
+            const explanation = tutorReply(topic);
+            document.getElementById('tutorResult').innerHTML = `<div class="result-card"><h3>Lesson: ${escapeHtml(topic)}</h3><p><b>Your tutor style:</b> ${styleText}</p><p>${escapeHtml(explanation)}</p><div class="mini-note"><b>Mini challenge:</b> Explain ${escapeHtml(topic)} in your own words, then create one tiny example in your code editor.</div></div>`;
+        }
+
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+        function generateQuiz() {
+            const subject = document.getElementById('quizSubject').value;
+            const topic = document.getElementById('quizTopic').value || subject + ' basics';
+            const questions = {
+                'JavaScript': ['Which keyword creates a block-scoped variable?', ['var','let','define','static'], 1],
+                'HTML': ['Which tag creates a hyperlink?', ['<img>','<a>','<p>','<link>'], 1],
+                'CSS': ['Which property changes text color?', ['font-style','background','color','display'], 2],
+                'C++': ['Which symbol is commonly used to access a value through a pointer?', ['&','*','#','@'], 1],
+                'AI / ML': ['What is a dataset?', ['A collection of data','A CSS file','A browser','A keyboard'], 0]
+            };
+            const q = questions[subject] || questions['JavaScript'];
+            document.getElementById('quizBox').innerHTML = `<div class="result-card"><small>${escapeHtml(subject)} • ${escapeHtml(topic)}</small><h2>${q[0]}</h2>${q[1].map((option,index)=>`<button class="quiz-option" onclick="checkAnswer(this,${index},${q[2]})">${String.fromCharCode(65+index)}. ${escapeHtml(option)}</button>`).join('')}<p id="quizFeedback"></p></div>`;
+        }
+        function checkAnswer(button, selected, correct) { const buttons=button.parentElement.querySelectorAll('.quiz-option'); buttons.forEach(b=>b.disabled=true); button.classList.add(selected===correct?'correct':'wrong'); if(selected!==correct) buttons[correct].classList.add('correct'); document.getElementById('quizFeedback').textContent=selected===correct?'Excellent! Correct answer. 🎉':'Nice try — the green option is correct. Review it and try another quiz!'; const count=document.getElementById('quizCount'); if(count) count.textContent=Number(count.textContent||0)+1; }
+
+        function generatePlan() { const subjects=(document.getElementById('subjects').value || 'Your subject').split(',').map(s=>s.trim()).filter(Boolean); const hours=Math.max(1,Number(document.getElementById('hours').value)||3); const goal=document.getElementById('goal').value || 'Build consistent study habits'; const time=(hours*60/subjects.length).toFixed(0); document.getElementById('planBox').innerHTML=`<div class="result-card"><h2>Your ${hours}-hour study plan</h2><p><b>Goal:</b> ${escapeHtml(goal)}</p><ol>${subjects.map((s,i)=>`<li><b>Block ${i+1} — ${escapeHtml(s)}</b>: Study and practice for ${time} minutes, then take a 5-minute break.</li>`).join('')}</ol><div class="mini-note">Finish with a 10-minute review: write what you learned and one question to revisit tomorrow.</div></div>`; }
+
+        function careerGuide() { const skills=document.getElementById('skills').value || 'HTML, CSS, JavaScript'; const interest=document.getElementById('interest').value || 'Web Development'; const text=interest.toLowerCase().includes('ai') ? 'Learn Python, data structures, NumPy/Pandas, basic statistics, then machine-learning fundamentals.' : 'Strengthen JavaScript, Git/GitHub, APIs, React, and build responsive portfolio projects.'; document.getElementById('careerBox').innerHTML=`<div class="result-card"><h2>Your learning roadmap</h2><p><b>Current skills:</b> ${escapeHtml(skills)}</p><p><b>Recommended direction:</b> ${escapeHtml(interest)}</p><p>${text}</p><div class="mini-note"><b>Portfolio tip:</b> Build one complete project, deploy it, and write a short README explaining what you learned.</div></div>`; }
+
+        document.addEventListener('DOMContentLoaded', () => { const input=document.getElementById('messageInput'); if(input) input.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); }}); });
+    </script>
+
+</body>
+
+</html>
