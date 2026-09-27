@@ -1,873 +1,471 @@
-/* =========================
-   PAGE NAVIGATION
-========================= */
-
+/* =========================================================
+   SMARTSTUDY AI — CORE APP LOGIC
+   Works fully offline with a broad built-in knowledge base.
+   If you add a real AI backend at /api/tutor (see README),
+   it will automatically use that instead — see callSmartAI().
+========================================================= */
+ 
+/* ---------- PAGE NAVIGATION ---------- */
+ 
 function showPage(pageName, button) {
-
-    const pages =
-        document.querySelectorAll(".page");
-
-    pages.forEach(function(page) {
-
-        page.classList.remove("active");
-
-    });
-
-
-    document
-        .getElementById(pageName)
-        .classList.add("active");
-
-
-    const buttons =
-        document.querySelectorAll(".menu-btn");
-
-    buttons.forEach(function(btn) {
-
-        btn.classList.remove("active");
-
-    });
-
-
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(pageName).classList.add("active");
+ 
+    document.querySelectorAll(".menu-btn").forEach(b => b.classList.remove("active"));
     button.classList.add("active");
-
+ 
+    if (pageName === "dashboard") renderDashboard();
 }
-
-
-/* =========================
-   DARK MODE
-========================= */
-
+ 
 function toggleTheme() {
-
     document.body.classList.toggle("dark");
-
+    localStorage.setItem("ss_theme", document.body.classList.contains("dark") ? "dark" : "light");
 }
-
-
-/* =========================
-   NEW CHAT
-========================= */
-
-function newChat() {
-
-    document.getElementById(
-        "chatMessages"
-    ).innerHTML = `
-
-        <div class="welcome">
-
-            <div class="ai-logo">
-                ✦
-            </div>
-
-            <h1>
-                How can I help you learn?
-            </h1>
-
-            <p>
-                Ask me anything about your studies.
-            </p>
-
-        </div>
-
-
-        <div class="suggestions">
-
-            <button
-                onclick="askQuestion('Explain C++ pointers in simple language')"
-            >
-
-                💡
-
-                <div>
-
-                    <b>
-                        Explain a concept
-                    </b>
-
-                    <small>
-                        Explain C++ pointers
-                    </small>
-
-                </div>
-
-            </button>
-
-
-            <button
-                onclick="askQuestion('Give me a C++ quiz')"
-            >
-
-                📝
-
-                <div>
-
-                    <b>
-                        Practice
-                    </b>
-
-                    <small>
-                        Give me a C++ quiz
-                    </small>
-
-                </div>
-
-            </button>
-
-        </div>
-
-    `;
-
+ 
+/* ---------- ACTIVITY TRACKING (localStorage) ----------
+   Powers the dashboard: subjects touched, streak, quiz scores. */
+ 
+function getActivity() {
+    try {
+        return JSON.parse(localStorage.getItem("ss_activity")) || { subjects: {}, streak: 0, lastActive: null };
+    } catch (e) {
+        return { subjects: {}, streak: 0, lastActive: null };
+    }
 }
-
-
-/* =========================
-   CHAT
-========================= */
-
-function sendMessage() {
-
-    const input =
-        document.getElementById(
-            "messageInput"
-        );
-
-
-    const message =
-        input.value.trim();
-
-
-    if (message === "") {
-
-        return;
-
-    }
-
-
-    addMessage(
-        "user",
-        message
-    );
-
-
-    input.value = "";
-
-
-    setTimeout(function() {
-
-        const answer =
-            getAIResponse(message);
-
-
-        addMessage(
-            "ai",
-            answer
-        );
-
-    }, 700);
-
+ 
+function saveActivity(a) {
+    localStorage.setItem("ss_activity", JSON.stringify(a));
 }
-
-
-/* =========================
-   SUGGESTION QUESTION
-========================= */
-
-function askQuestion(question) {
-
-    document.getElementById(
-        "messageInput"
-    ).value = question;
-
-
-    sendMessage();
-
+ 
+function touchSubject(subject) {
+    const a = getActivity();
+    if (!a.subjects[subject]) a.subjects[subject] = { asked: 0, quizzes: 0, scoreSum: 0, scoreMax: 0 };
+    a.subjects[subject].asked++;
+    bumpStreak(a);
+    saveActivity(a);
 }
-
-
-/* =========================
-   ADD CHAT MESSAGE
-========================= */
-
-function addMessage(type, text) {
-
-    const chat =
-        document.getElementById(
-            "chatMessages"
-        );
-
-
-    const message =
-        document.createElement(
-            "div"
-        );
-
-
-    message.className =
-        "chat-message " + type;
-
-
-    message.innerHTML = `
-
-        <div class="bubble">
-
-            ${text}
-
-        </div>
-
-    `;
-
-
-    chat.appendChild(message);
-
-
-    window.scrollTo(
-        0,
-        document.body.scrollHeight
-    );
-
+ 
+function recordQuiz(subject, score, max) {
+    const a = getActivity();
+    if (!a.subjects[subject]) a.subjects[subject] = { asked: 0, quizzes: 0, scoreSum: 0, scoreMax: 0 };
+    a.subjects[subject].quizzes++;
+    a.subjects[subject].scoreSum += score;
+    a.subjects[subject].scoreMax += max;
+    bumpStreak(a);
+    saveActivity(a);
+    renderDashboard();
 }
-
-
-/* =========================
-   SIMPLE AI RESPONSES
-========================= */
-
-function getAIResponse(message) {
-
-    const text =
-        message.toLowerCase();
-
-
-    if (
-        text.includes("pointer")
-    ) {
-
-        return `
-
-            <b>C++ Pointer kya hota hai?</b>
-
-            <br><br>
-
-            Pointer ek variable hota hai
-            jo kisi doosre variable ka
-            <b>memory address</b> store karta hai.
-
-            <br><br>
-
-            Example:
-
-            <br><br>
-
-            <code>
-            int x = 10;<br>
-            int *p = &x;
-            </code>
-
-            <br><br>
-
-            <b>&x</b> → x ka address
-
-            <br>
-
-            <b>p</b> → address store karta hai
-
-            <br>
-
-            <b>*p</b> → x ki value deta hai
-
-        `;
-
-    }
-
-
-    if (
-        text.includes("loop")
-    ) {
-
-        return `
-
-            <b>C++ Loop</b>
-
-            <br><br>
-
-            Loop ka use same code ko
-            baar-baar execute karne ke liye
-            hota hai.
-
-            <br><br>
-
-            Common loops:
-
-            <br>
-
-            1. for loop
-
-            <br>
-
-            2. while loop
-
-            <br>
-
-            3. do-while loop
-
-            <br><br>
-
-            Example:
-
-            <br><br>
-
-            <code>
-
-            for(int i = 1; i <= 5; i++) {
-                cout << i;
-            }
-
-            </code>
-
-        `;
-
-    }
-
-
-    if (
-        text.includes("html") &&
-        text.includes("css")
-    ) {
-
-        return `
-
-            HTML website ka structure
-            banata hai.
-
-            <br><br>
-
-            CSS website ko design karta hai.
-
-            <br><br>
-
-            Example:
-
-            <br>
-
-            HTML → Heading
-
-            <br>
-
-            CSS → Heading ka color,
-            size aur position
-
-            <br><br>
-
-            HTML + CSS ke baad
-            <b>JavaScript</b> learn karna
-            useful next step hai.
-
-        `;
-
-    }
-
-
-    if (
-        text.includes("study plan")
-    ) {
-
-        return `
-
-            <b>Simple Study Plan</b>
-
-            <br><br>
-
-            📚 1 hour → C++ / DSA
-
-            <br>
-
-            💻 1 hour → Web Development
-
-            <br>
-
-            🤖 30 minutes → AI/ML
-
-            <br>
-
-            🔁 30 minutes → Revision
-
-            <br><br>
-
-            Daily consistency sabse important hai.
-
-        `;
-
-    }
-
-
-    if (
-        text.includes("quiz")
-    ) {
-
-        return `
-
-            Quiz ke liye left sidebar se
-
-            <b>Quiz Generator</b>
-
-            open karo.
-
-            <br><br>
-
-            Wahan subject aur topic
-            select karke quiz generate
-            kar sakte ho.
-
-        `;
-
-    }
-
-
-    if (
-        text.includes("career")
-        ||
-        text.includes("learn next")
-    ) {
-
-        return `
-
-            Agar tum HTML aur CSS
-            jaante ho, to next:
-
-            <br><br>
-
-            1. JavaScript
-
-            <br>
-
-            2. Git & GitHub
-
-            <br>
-
-            3. Responsive Web Design
-
-            <br>
-
-            4. React
-
-            <br>
-
-            5. Backend basics
-
-            <br><br>
-
-            Saath me C++ aur DSA
-            practice karte raho.
-
-        `;
-
-    }
-
-
-    return `
-
-        Good question! 👍
-
-        <br><br>
-
-        Main tumhe is topic ko
-        simple language me explain
-        karne me help kar sakta hoon.
-
-        <br><br>
-
-        Tum question ko thoda
-        specific karke pucho.
-
-        <br><br>
-
-        Example:
-
-        <br>
-
-        "Explain arrays in C++"
-
-        <br>
-
-        "What is JavaScript?"
-
-        <br>
-
-        "Give me DSA questions"
-
-    `;
-
+ 
+function bumpStreak(a) {
+    const today = new Date().toDateString();
+    if (a.lastActive === today) return;
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    a.streak = (a.lastActive === yesterday) ? a.streak + 1 : 1;
+    a.lastActive = today;
 }
-
-
-/* =========================
-   QUIZ GENERATOR
-========================= */
-
-function generateQuiz() {
-
-    const subject =
-        document.getElementById(
-            "quizSubject"
-        ).value;
-
-
-    const topic =
-        document.getElementById(
-            "quizTopic"
-        ).value;
-
-
-    const quizBox =
-        document.getElementById(
-            "quizBox"
-        );
-
-
-    quizBox.innerHTML = `
-
-        <div class="output">
-
-            <h2>
-                ${subject} Quiz
-            </h2>
-
-            <p>
-                Topic: ${topic || "Basics"}
-            </p>
-
-
-            <div class="question">
-
-                <h3>
-                    1. Which language is used
-                    to style a webpage?
-                </h3>
-
-                <label class="option">
-
-                    <input
-                        type="radio"
-                        name="q1"
-                    >
-
-                    HTML
-
-                </label>
-
-
-                <label class="option">
-
-                    <input
-                        type="radio"
-                        name="q1"
-                        value="correct"
-                    >
-
-                    CSS
-
-                </label>
-
-
-                <label class="option">
-
-                    <input
-                        type="radio"
-                        name="q1"
-                    >
-
-                    C++
-
-                </label>
-
-            </div>
-
-
-            <div class="question">
-
-                <h3>
-                    2. Which language adds
-                    interactivity to webpages?
-                </h3>
-
-                <label class="option">
-
-                    <input
-                        type="radio"
-                        name="q2"
-                    >
-
-                    HTML
-
-                </label>
-
-
-                <label class="option">
-
-                    <input
-                        type="radio"
-                        name="q2"
-                        value="correct"
-                    >
-
-                    JavaScript
-
-                </label>
-
-
-                <label class="option">
-
-                    <input
-                        type="radio"
-                        name="q2"
-                    >
-
-                    CSS
-
-                </label>
-
-            </div>
-
-
-            <button
-                class="primary-btn"
-                onclick="checkQuiz()"
-            >
-                Check Score
-            </button>
-
-
-            <p
-                id="score"
-                style="margin-top:15px"
-            ></p>
-
-        </div>
-
-    `;
-
-}
-
-
-/* =========================
-   CHECK QUIZ
-========================= */
-
-function checkQuiz() {
-
-    let score = 0;
-
-
-    const answers =
-        document.querySelectorAll(
-            'input[value="correct"]'
-        );
-
-
-    answers.forEach(function(answer) {
-
-        if (answer.checked) {
-
-            score++;
-
-        }
-
+ 
+/* ---------- DASHBOARD RENDERING ---------- */
+ 
+function renderDashboard() {
+    const a = getActivity();
+    const subjects = Object.keys(a.subjects);
+ 
+    document.getElementById("subjectCount").textContent = subjects.length;
+    document.getElementById("streakCount").textContent = a.streak + (a.streak === 1 ? " Day" : " Days");
+ 
+    let totalQuizzes = 0, totalScore = 0, totalMax = 0;
+    subjects.forEach(s => {
+        totalQuizzes += a.subjects[s].quizzes;
+        totalScore += a.subjects[s].scoreSum;
+        totalMax += a.subjects[s].scoreMax;
     });
-
-
-    document.getElementById(
-        "score"
-    ).innerHTML =
-
-        "<b>Your Score: " +
-        score +
-        " / 2</b>";
-
+    document.getElementById("quizCount").textContent = totalQuizzes;
+    document.getElementById("progressPercent").textContent = totalMax > 0 ? Math.round((totalScore / totalMax) * 100) + "%" : "—";
+ 
+    const list = document.getElementById("progressList");
+    if (subjects.length === 0) {
+        list.innerHTML = `<p style="color:#888">Nothing yet — ask the tutor a question or take a quiz to see progress here.</p>`;
+        return;
+    }
+    list.innerHTML = subjects.map(s => {
+        const d = a.subjects[s];
+        const pct = d.scoreMax > 0 ? Math.round((d.scoreSum / d.scoreMax) * 100) : Math.min(100, d.asked * 10);
+        return `
+            <div class="progress">
+                <div class="progress-title"><span>${s}</span><b>${pct}%</b></div>
+                <div class="bar"><div style="width:${pct}%"></div></div>
+            </div>`;
+    }).join("");
 }
-
-
-/* =========================
+ 
+/* ---------- NEW CHAT ---------- */
+ 
+function newChat() {
+    document.getElementById("chatMessages").innerHTML = `
+        <div class="welcome">
+            <div class="ai-logo">✦</div>
+            <h1>How can I help you learn?</h1>
+            <p>Ask about any subject — tech or non-tech.</p>
+        </div>
+        <div class="suggestions">
+            <button onclick="askQuestion('Explain C++ pointers in simple language')">
+                💡<div><b>Explain a concept</b><small>Explain C++ pointers</small></div>
+            </button>
+            <button onclick="askQuestion('Explain the French Revolution simply')">
+                📖<div><b>Any subject</b><small>Explain the French Revolution</small></div>
+            </button>
+        </div>`;
+}
+ 
+/* ---------- CHAT ---------- */
+ 
+function sendMessage() {
+    const input = document.getElementById("messageInput");
+    const message = input.value.trim();
+    if (message === "") return;
+ 
+    addMessage("user", message);
+    input.value = "";
+ 
+    const thinkingId = addMessage("ai", "Thinking…", true);
+ 
+    callSmartAI(message, buildTutorPrompt(message)).then(answer => {
+        updateMessage(thinkingId, answer);
+    });
+}
+ 
+function askQuestion(question) {
+    document.getElementById("messageInput").value = question;
+    sendMessage();
+}
+ 
+function addMessage(type, text, returnId) {
+    const chat = document.getElementById("chatMessages");
+    const message = document.createElement("div");
+    const id = "msg-" + Date.now() + Math.random().toString(36).slice(2, 6);
+    message.id = id;
+    message.className = "chat-message " + type;
+    message.innerHTML = `<div class="bubble">${text}</div>`;
+    chat.appendChild(message);
+    window.scrollTo(0, document.body.scrollHeight);
+    return id;
+}
+ 
+function updateMessage(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.querySelector(".bubble").innerHTML = text;
+}
+ 
+function buildTutorPrompt(message) {
+    return "You are a patient tutor for a student of any background — tech or non-tech. " +
+        "Explain clearly in short paragraphs with a simple example. Question: " + message;
+}
+ 
+/* =========================================================
+   SMART AI LAYER
+   Tries a real backend first (POST /api/tutor -> {answer}).
+   If that route doesn't exist yet (this static site has none
+   out of the box), it falls back to the built-in knowledge base
+   below so the app is never broken — see README for adding a
+   real backend.
+========================================================= */
+ 
+async function callSmartAI(rawMessage, prompt) {
+    try {
+        const res = await fetch("/api/tutor", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.answer) {
+                trackSubjectFromText(rawMessage);
+                return data.answer;
+            }
+        }
+    } catch (e) {
+        /* no backend configured yet — fall through to local knowledge */
+    }
+    return getLocalAnswer(rawMessage);
+}
+ 
+function trackSubjectFromText(text) {
+    const t = text.toLowerCase();
+    let subject = "General";
+    if (/pointer|loop|array|c\+\+|dsa|algorithm/.test(t)) subject = "C++ / DSA";
+    else if (/html|css|javascript|react|web/.test(t)) subject = "Web Development";
+    else if (/ai|ml|machine learning|neural/.test(t)) subject = "AI / ML";
+    else if (/history|revolution|war|empire/.test(t)) subject = "History";
+    else if (/physics|chemistry|biology|science/.test(t)) subject = "Science";
+    else if (/account|finance|business|commerce|economics/.test(t)) subject = "Commerce";
+    else if (/math|equation|algebra|geometry/.test(t)) subject = "Math";
+    touchSubject(subject);
+}
+ 
+/* ---------- LOCAL KNOWLEDGE BASE (fallback, works offline) ---------- */
+ 
+function getLocalAnswer(message) {
+    const t = message.toLowerCase();
+    trackSubjectFromText(message);
+ 
+    if (t.includes("pointer")) return topicPointer();
+    if (t.includes("loop")) return topicLoop();
+    if (t.includes("html") && t.includes("css")) return topicHtmlCss();
+    if (t.includes("react")) return topicReact();
+    if (t.includes("revolution") || t.includes("history")) return topicHistory();
+    if (t.includes("photosynthesis") || t.includes("biology")) return topicBiology();
+    if (t.includes("physics") || t.includes("newton")) return topicPhysics();
+    if (t.includes("account") || t.includes("commerce") || t.includes("finance")) return topicCommerce();
+    if (t.includes("study plan")) return topicStudyPlan();
+    if (t.includes("quiz")) return `Head to <b>Quiz Generator</b> in the sidebar — pick any subject, tech or non-tech, and generate one instantly.`;
+    if (t.includes("career") || t.includes("learn next")) return topicCareer();
+ 
+    return `
+        Good question! I don't have a ready-made explanation for that exact phrase yet,
+        but I can help if you make it a bit more specific.
+        <br><br>
+        Try things like:
+        <br>• "Explain arrays in C++"
+        <br>• "What caused World War 1?"
+        <br>• "How does supply and demand work?"
+        <br>• "Explain photosynthesis"
+        <br><br>
+        Or open <b>Problem Solving</b> in the sidebar and paste an exact question or problem —
+        that mode walks through it step by step.`;
+}
+ 
+function topicPointer() {
+    return `<b>What is a pointer (C++)?</b><br><br>
+        A pointer is a variable that stores the <b>memory address</b> of another variable,
+        instead of storing a value directly.<br><br>
+        <code>int x = 10;<br>int *p = &x;</code><br><br>
+        <b>&x</b> → address of x<br><b>p</b> → stores that address<br><b>*p</b> → gives you x's value back (10)`;
+}
+function topicLoop() {
+    return `<b>Loops in C++</b><br><br>
+        A loop repeats a block of code without rewriting it.<br><br>
+        1. <b>for</b> — when you know how many times to repeat<br>
+        2. <b>while</b> — repeats while a condition is true<br>
+        3. <b>do-while</b> — runs at least once, then checks the condition<br><br>
+        <code>for(int i = 1; i <= 5; i++) { cout << i; }</code>`;
+}
+function topicHtmlCss() {
+    return `HTML builds the <b>structure</b> of a page (headings, text, buttons).<br><br>
+        CSS controls the <b>look</b> — color, spacing, layout.<br><br>
+        Example: HTML says "this is a heading"; CSS says "make it blue and centered."<br><br>
+        After HTML + CSS, most people learn <b>JavaScript</b> next to make pages interactive.`;
+}
+function topicReact() {
+    return `<b>React</b> is a JavaScript library for building interfaces out of reusable
+        <b>components</b> — small pieces of UI (a button, a card, a form) that manage their own data
+        and re-render automatically when that data changes. It's usually learned after
+        core HTML, CSS, and JavaScript.`;
+}
+function topicHistory() {
+    return `<b>The French Revolution (1789–1799), simply:</b><br><br>
+        France was deeply in debt, ordinary people faced high taxes and food shortages,
+        while the king and nobles lived well. Anger built up until people stormed the
+        Bastille prison (a symbol of royal power) in 1789.<br><br>
+        This led to the end of the monarchy, the rise of ideas like "liberty, equality,
+        fraternity," and eventually paved the way for Napoleon's rise to power.`;
+}
+function topicBiology() {
+    return `<b>Photosynthesis, simply:</b><br><br>
+        Plants take in <b>sunlight, water, and carbon dioxide</b>, and convert them into
+        <b>glucose (food/energy)</b> and <b>oxygen</b> — which they release into the air.<br><br>
+        <code>6CO2 + 6H2O + light → C6H12O6 + 6O2</code><br><br>
+        It happens mainly in the leaves, inside structures called chloroplasts.`;
+}
+function topicPhysics() {
+    return `<b>Newton's Second Law:</b><br><br>
+        Force = Mass × Acceleration (<code>F = ma</code>).<br><br>
+        In plain terms: the heavier an object, the more force you need to speed it up
+        by the same amount. Push the same force on a bicycle vs. a truck — the bicycle
+        accelerates much faster because it's lighter.`;
+}
+function topicCommerce() {
+    return `<b>Basics of accounting/finance:</b><br><br>
+        Every business tracks three things: what it <b>owns</b> (assets), what it <b>owes</b>
+        (liabilities), and what's left over for the owner (equity).<br><br>
+        <code>Assets = Liabilities + Equity</code><br><br>
+        Profit is simply: <code>Revenue − Expenses</code>. Everything in basic accounting
+        builds on these two ideas.`;
+}
+function topicStudyPlan() {
+    return `<b>Simple daily study plan:</b><br><br>
+        📚 1 hour → your toughest subject first (when your mind is freshest)<br>
+        💻 1 hour → practice problems, not just reading<br>
+        📖 30 min → a subject you enjoy less (little and often beats cramming)<br>
+        🔁 30 min → revise yesterday's topic<br><br>
+        Open <b>Study Planner</b> in the sidebar to generate one tailored to your subjects.`;
+}
+function topicCareer() {
+    return `Open <b>Career Guide</b> in the sidebar and tell it your background —
+        tech, commerce, arts, or science — plus your skills and interests, and it'll
+        suggest a concrete next-step roadmap for you, not just for programmers.`;
+}
+ 
+/* =========================================================
+   PROBLEM SOLVING
+========================================================= */
+ 
+async function solveProblem() {
+    const problem = document.getElementById("solveInput").value.trim();
+    const box = document.getElementById("solveBox");
+    if (!problem) return;
+ 
+    box.innerHTML = `<div class="output">Working through it…</div>`;
+    const prompt = "Solve this step by step, numbering each step and explaining the reasoning, " +
+        "then give a one-line final answer. Problem: " + problem;
+ 
+    const answer = await callSmartAI(problem, prompt);
+    box.innerHTML = `<div class="output"><h2>🧩 Step-by-step</h2><br>${answer}
+        <br><br><i>Tip: for word problems, break it into "what am I given" → "what am I finding" →
+        "which formula connects them" — that's usually 80% of the work.</i></div>`;
+}
+ 
+/* =========================================================
+   QUIZ GENERATOR — now with real question banks per subject
+========================================================= */
+ 
+const QUIZ_BANK = {
+    "C++": [
+        { q: "What does 'int' declare?", options: ["A text value", "A whole number", "A decimal", "A loop"], correct: 1 },
+        { q: "Which loop always runs at least once?", options: ["for", "while", "do-while", "if"], correct: 2 }
+    ],
+    "HTML": [
+        { q: "Which tag creates a hyperlink?", options: ["<link>", "<a>", "<href>", "<url>"], correct: 1 },
+        { q: "Which tag is used for the largest heading?", options: ["<h6>", "<head>", "<h1>", "<title>"], correct: 2 }
+    ],
+    "CSS": [
+        { q: "Which property changes text color?", options: ["font-color", "text-color", "color", "background"], correct: 2 },
+        { q: "Which unit is relative to the root font size?", options: ["px", "rem", "cm", "pt"], correct: 1 }
+    ],
+    "JavaScript": [
+        { q: "Which keyword declares a constant?", options: ["var", "let", "const", "static"], correct: 2 },
+        { q: "What does '===' check?", options: ["Value only", "Type only", "Value and type", "Nothing"], correct: 2 }
+    ],
+    "AI / ML": [
+        { q: "What is 'training data' used for?", options: ["Styling a UI", "Teaching a model patterns", "Storing passwords", "Compiling code"], correct: 1 },
+        { q: "Which term means a model gives wrong confident answers?", options: ["Overfitting", "Hallucination", "Compilation", "Indexing"], correct: 1 }
+    ],
+    "General Science": [
+        { q: "What gas do plants release during photosynthesis?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], correct: 1 },
+        { q: "What is the boiling point of water at sea level (°C)?", options: ["50", "90", "100", "120"], correct: 2 }
+    ],
+    "History": [
+        { q: "The French Revolution began in which year?", options: ["1689", "1789", "1889", "1901"], correct: 1 },
+        { q: "Who was the first President of the United States?", options: ["Lincoln", "Jefferson", "Washington", "Adams"], correct: 2 }
+    ],
+    "Commerce": [
+        { q: "Assets = Liabilities + ?", options: ["Revenue", "Equity", "Expense", "Tax"], correct: 1 },
+        { q: "Profit is calculated as?", options: ["Revenue + Expenses", "Revenue − Expenses", "Assets − Liabilities", "Equity × Tax"], correct: 1 }
+    ],
+    "General Knowledge": [
+        { q: "How many continents are there?", options: ["5", "6", "7", "8"], correct: 2 },
+        { q: "What is the currency of Japan?", options: ["Won", "Yen", "Yuan", "Ringgit"], correct: 1 }
+    ]
+};
+ 
+function generateQuiz() {
+    const subject = document.getElementById("quizSubject").value;
+    const topic = document.getElementById("quizTopic").value;
+    const quizBox = document.getElementById("quizBox");
+    const questions = QUIZ_BANK[subject] || QUIZ_BANK["General Knowledge"];
+ 
+    quizBox.innerHTML = `
+        <div class="output">
+            <h2>${subject} Quiz</h2>
+            <p>Topic: ${topic || "Basics"}</p>
+            ${questions.map((item, i) => `
+                <div class="question">
+                    <h3>${i + 1}. ${item.q}</h3>
+                    ${item.options.map((opt, j) => `
+                        <label class="option">
+                            <input type="radio" name="q${i}" value="${j === item.correct ? 'correct' : 'wrong'}">
+                            ${opt}
+                        </label>`).join("")}
+                </div>`).join("")}
+            <button class="primary-btn" onclick="checkQuiz('${subject}', ${questions.length})">Check Score</button>
+            <p id="score" style="margin-top:15px"></p>
+        </div>`;
+}
+ 
+function checkQuiz(subject, total) {
+    let score = 0;
+    document.querySelectorAll('input[value="correct"]').forEach(a => { if (a.checked) score++; });
+    document.getElementById("score").innerHTML = `<b>Your Score: ${score} / ${total}</b>`;
+    recordQuiz(subject, score, total);
+}
+ 
+/* =========================================================
    STUDY PLANNER
-========================= */
-
+========================================================= */
+ 
 function generatePlan() {
-
-    const subjects =
-        document.getElementById(
-            "subjects"
-        ).value;
-
-
-    const hours =
-        document.getElementById(
-            "hours"
-        ).value;
-
-
-    const goal =
-        document.getElementById(
-            "goal"
-        ).value;
-
-
-    const box =
-        document.getElementById(
-            "planBox"
-        );
-
-
+    const subjects = document.getElementById("subjects").value || "your subjects";
+    const hours = document.getElementById("hours").value;
+    const goal = document.getElementById("goal").value || "improve your skills";
+    const box = document.getElementById("planBox");
+ 
     box.innerHTML = `
-
         <div class="output">
-
-            <h2>
-                📅 Your Study Plan
-            </h2>
-
-            <br>
-
-            <b>Subjects:</b>
-            ${subjects || "C++, DSA, Web Development"}
-
-            <br><br>
-
-            <b>Daily Time:</b>
-            ${hours} hours
-
-            <br><br>
-
-            <b>Goal:</b>
-            ${goal || "Improve skills"}
-
-            <br><br>
-
-            <b>Day 1</b>
-            <br>
-            Learn basic concepts
-
-            <br><br>
-
-            <b>Day 2</b>
-            <br>
-            Practice questions
-
-            <br><br>
-
-            <b>Day 3</b>
-            <br>
-            Continue new topics
-
-            <br><br>
-
-            <b>Day 4</b>
-            <br>
-            Practice + revision
-
-            <br><br>
-
-            <b>Day 5</b>
-            <br>
-            Solve problems
-
-            <br><br>
-
-            <b>Day 6</b>
-            <br>
-            Project practice
-
-            <br><br>
-
-            <b>Day 7</b>
-            <br>
-            Full revision + test
-
-        </div>
-
-    `;
-
+            <h2>📅 Your Study Plan</h2><br>
+            <b>Subjects:</b> ${subjects}<br><br>
+            <b>Daily Time:</b> ${hours} hours<br><br>
+            <b>Goal:</b> ${goal}<br><br>
+            <b>Day 1</b><br>Learn basic concepts<br><br>
+            <b>Day 2</b><br>Practice questions<br><br>
+            <b>Day 3</b><br>Continue new topics<br><br>
+            <b>Day 4</b><br>Practice + revision<br><br>
+            <b>Day 5</b><br>Solve problems<br><br>
+            <b>Day 6</b><br>Project / mock test practice<br><br>
+            <b>Day 7</b><br>Full revision + self-test
+        </div>`;
 }
-
-
-/* =========================
-   CAREER GUIDE
-========================= */
-
+ 
+/* =========================================================
+   CAREER GUIDE — now branches by background, not just tech
+========================================================= */
+ 
+const CAREER_PATHS = {
+    tech: ["JavaScript", "Git & GitHub", "Data Structures & Algorithms", "React", "Backend basics (Node/Django)", "System design fundamentals"],
+    commerce: ["Excel & financial modeling", "Basic accounting (Tally/QuickBooks)", "Digital marketing basics", "Business communication", "Introductory data analysis (Excel/SQL)"],
+    arts: ["Strong writing & research skills", "Public speaking / communication", "Basic design tools (Canva/Figma)", "Social media & content strategy", "A portfolio of writing or projects"],
+    science: ["Lab technique & data recording", "Statistics fundamentals", "Scientific writing", "A specialization (bio/chem/physics track)", "Research internships"]
+};
+ 
 function careerGuide() {
-
-    const skills =
-        document.getElementById(
-            "skills"
-        ).value;
-
-
-    const interest =
-        document.getElementById(
-            "interest"
-        ).value;
-
-
-    const box =
-        document.getElementById(
-            "careerBox"
-        );
-
-
+    const background = document.getElementById("background").value;
+    const skills = document.getElementById("skills").value || "just getting started";
+    const interest = document.getElementById("interest").value || "still exploring";
+    const box = document.getElementById("careerBox");
+    const path = CAREER_PATHS[background] || CAREER_PATHS.tech;
+ 
     box.innerHTML = `
-
         <div class="output">
-
-            <h2>
-                🎯 Your Learning Roadmap
-            </h2>
-
-            <br>
-
-            <b>Your Skills:</b>
-
-            <br>
-
-            ${skills || "HTML, CSS"}
-
-            <br><br>
-
-            <b>Your Interest:</b>
-
-            <br>
-
-            ${interest || "Software Development"}
-
-            <br><br>
-
-            <b>Recommended Next Steps:</b>
-
-            <br><br>
-
-            1️⃣ Learn JavaScript
-
-            <br><br>
-
-            2️⃣ Build 2-3 projects
-
-            <br><br>
-
-            3️⃣ Learn Git & GitHub
-
-            <br><br>
-
-            4️⃣ Start DSA
-
-            <br><br>
-
-            5️⃣ Learn React
-
-            <br><br>
-
-            6️⃣ Explore AI/ML if interested
-
-        </div>
-
-    `;
-
+            <h2>🎯 Your Learning Roadmap</h2><br>
+            <b>Background:</b> ${background}<br><br>
+            <b>Your Skills:</b> ${skills}<br><br>
+            <b>Your Interest:</b> ${interest}<br><br>
+            <b>Recommended Next Steps:</b><br><br>
+            ${path.map((step, i) => `${i + 1}️⃣ ${step}`).join("<br><br>")}
+        </div>`;
 }
+ 
+/* ---------- INIT ---------- */
+ 
+window.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("ss_theme") === "dark") document.body.classList.add("dark");
+});
+ 
+
+
+
+
+
+
+
+
+
